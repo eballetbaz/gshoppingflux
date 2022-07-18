@@ -2233,7 +2233,7 @@ class GShoppingFlux extends Module
             $product['material'] = '';
             $product['pattern'] = '';
             $product['size'] = '';
-            if (is_array($attributesResume) > 0 && $this->module_conf['export_attributes'] == 1) {
+            if ($attributesResume && $this->module_conf['export_attributes'] == 1) {
                 $original_product = $product;
                 $categories_value = $this->categories_values[$product['id_gcategory']];
                 $combinum = 0;
