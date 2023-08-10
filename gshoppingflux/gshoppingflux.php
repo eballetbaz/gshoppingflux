@@ -2878,6 +2878,7 @@ class GShoppingFlux extends Module
           $xml_googleshopping .= '<g:shipping_width>'.number_format($product['depth'], 2, '.', '').' '.Configuration::get('PS_DIMENSION_UNIT').'</g:shipping_width>'."\n";
           $xml_googleshopping .= '<g:shipping_height>'.number_format($product['height'], 2, '.', '').' '.Configuration::get('PS_DIMENSION_UNIT').'</g:shipping_height>'."\n";
         }
+        $xml_googleshopping .= '<g:unit_pricing_measure>1 ct</g:unit_pricing_measure>'. "\n";
         $xml_googleshopping .= '</item>'."\n\n";
 
         if ($combination) {
