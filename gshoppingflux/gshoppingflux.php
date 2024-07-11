@@ -2870,7 +2870,7 @@ class GShoppingFlux extends Module
 
         // Shipping weight
         if ($product['weight'] != '0') {
-            $xml_googleshopping .= '<g:shipping_weight>'.number_format($product['weight'], 2, '.', '').' '.Configuration::get('PS_WEIGHT_UNIT').'</g:shipping_weight>'."\n";
+            $xml_googleshopping .= '<g:shipping_weight>'.number_format($product['weight'], 2, '.', '').' '.strtolower(Configuration::get('PS_WEIGHT_UNIT')).'</g:shipping_weight>'."\n";
         }
         if($this->module_conf['shipping_dimension'] == 1 && ($product['width'] != 0 && $product['height'] != 0 && $product['depth'] != 0))
         {
