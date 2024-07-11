@@ -37,7 +37,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 ## Authors
 
 * **Jordi Martin** - *Initial work* - [jmartin82](https://github.com/jmartin82)
-* **diMooz** - *Continue working* - [diMooz](https://github.com/diMooz)
+* **d1m007** - *Continue working* - [d1m007](https://github.com/d1m007)
 * **Casper Olsen** - *Current maintainer* - [casper-o](https://github.com/casper-o)
 
 See also the list of [contributors](https://github.com/dim00z/gshoppingflux/contributors) who participated in this project.
