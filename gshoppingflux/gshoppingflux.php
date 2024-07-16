@@ -701,7 +701,7 @@ class GShoppingFlux extends Module
                                     'id_carrier' => 'no',
                                     'name' => $this->l('No'),
                                 ),
-                            ), Carrier::getCarriers($this->context->language->id)),
+                            ), Carrier::getCarriers($this->context->language->id, false, false, null, null, Carrier::ALL_CARRIERS)),
                             'id' => 'id_carrier',
                             'name' => 'name',
                         ),
