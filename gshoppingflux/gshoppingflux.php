@@ -467,7 +467,7 @@ class GShoppingFlux extends Module
             $languages = GLangAndCurrency::getLangCurrencies($lang_id, $shop_id);
         } else {
             $count = $this->generateShopFileList($shop_id, $local_inventory, $reviews);
-            $languages = GLangAndCurrency::getLangCurrencies($lang_id, $shop_id);
+            $languages = GLangAndCurrency::getAllLangCurrencies(1);
             if ($reviews) {
                 if (Configuration::get('GS_GEN_FILE_IN_ROOT', 0, $shop_group_id, $shop_id) == 1) {
                     $get_file_url = $this->uri . $this->_getOutputFileName(0, 0, $shop_id, $local_inventory, $reviews);
