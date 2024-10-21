@@ -389,6 +389,9 @@ class GShoppingFlux extends Module
             } else {
                 $this->_html .= $this->displayError(sprintf($this->l('Unable to update settings for the following shop: %s'), implode(', ', $errors_update_shops)));
             }
+        } else if (Tools::isSubmit('submitReviewsFluxOptions')) {
+            $this->confirm = $this->l('The settings have been updated.');
+            $this->generateXMLFiles(0, $shop_id, $shop_group_id, false, true);
         } elseif (Tools::isSubmit('updateCategory')) {
             $id_gcategory = (int) Tools::getValue('id_gcategory', 0);
             $export = (int) Tools::getValue('export', 0);
@@ -448,6 +451,7 @@ class GShoppingFlux extends Module
         } else {
             $this->_html .= $this->renderForm();
             $this->_html .= $this->renderLocalInventoryForm();
+            $this->_html .= $this->renderReviewsForm();
             $this->_html .= $this->renderCategList();
             $this->_html .= $this->renderLangList();
             $this->_html .= $this->renderInfo();
@@ -456,14 +460,25 @@ class GShoppingFlux extends Module
         return $this->_html;
     }
 
-    private function generateXMLFiles($lang_id, $shop_id, $shop_group_id, $local_inventory = false)
+    private function generateXMLFiles($lang_id, $shop_id, $shop_group_id, $local_inventory = false, $reviews = false)
     {
         if (isset($lang_id) && $lang_id != 0) {
             $count = $this->generateLangFileList($lang_id, $shop_id, $local_inventory);
             $languages = GLangAndCurrency::getLangCurrencies($lang_id, $shop_id);
         } else {
-            $count = $this->generateShopFileList($shop_id, $local_inventory);
-            $languages = GLangAndCurrency::getAllLangCurrencies(1);
+            $count = $this->generateShopFileList($shop_id, $local_inventory, $reviews);
+            $languages = GLangAndCurrency::getLangCurrencies($lang_id, $shop_id);
+            if($reviews) {
+                if (Configuration::get('GS_GEN_FILE_IN_ROOT', 0, $shop_group_id, $shop_id) == 1) {
+                    $get_file_url = $this->uri . $this->_getOutputFileName(0, 0, $shop_id, $local_inventory, $reviews);
+                } else {
+                    $get_file_url = $this->uri . 'modules/' . $this->name . '/export/' . $this->_getOutputFileName(0, 0, $shop_id, $local_inventory, $reviews);
+                }
+                $this->confirm .= '<br /> <a href="' . $get_file_url . '" target="_blank">' . $get_file_url . '</a> : ' . $count['nb_reviews']  . ' ' . $this->l('reviews exported');
+                $this->_html .= $this->displayConfirmation(html_entity_decode($this->confirm));
+
+                return;
+            }
         }
 
         foreach ($languages as $i => $lang) {
@@ -1058,6 +1073,47 @@ class GShoppingFlux extends Module
                     )),
                 'submit' => array(
                     'name' => 'submitLocalInventoryFluxOptions',
+                    'title' => $this->l('Save & Export'),
+                ),
+            ),
+        );
+
+        return $helper->generateForm(array(
+            $fields_form,
+        ));
+    }
+
+    public function renderReviewsForm()
+    {
+        $helper = new HelperForm();
+        $helper->show_toolbar = false;
+        $helper->table = $this->table;
+
+        $lang = new Language((int) Configuration::get('PS_LANG_DEFAULT'));
+        $helper->default_form_language = $lang->id;
+        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
+        $this->fields_form = array();
+        $helper->module = $this;
+        $helper->identifier = $this->identifier;
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+        $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $helper->tpl_vars = array(
+            'fields_value' => $this->getConfigLocalInventoryFieldsValues($this->context->shop->id),
+            'id_language' => $this->context->language->id,
+            'languages' => $this->context->controller->getLanguages(),
+        );
+
+        $id_lang = $this->context->language->id;
+        $id_shop = $this->context->shop->id;
+
+        $fields_form = array(
+            'form' => array(
+                'legend' => array(
+                    'title' => $this->l('Reviews'),
+                    'icon' => 'icon-cogs',
+                ),
+                'submit' => array(
+                    'name' => 'submitReviewsFluxOptions',
                     'title' => $this->l('Save & Export'),
                 ),
             ),
@@ -1853,8 +1909,16 @@ class GShoppingFlux extends Module
                 $output .= '<a href="'.$get_local_file_url.'">'.$get_local_file_url.'</a> <br /> ';
             }
         }
+        if (Configuration::get('GS_GEN_FILE_IN_ROOT', 0, $this->context->shop->id_shop_group, $this->context->shop->id) == 1) {
+            $get_reviews_file_url = $this->uri.$this->_getOutputFileName('', '', $this->context->shop->id,false, true);
+        } else {
+            $get_reviews_file_url = $this->uri.'modules/'.$this->name.'/export/'.$this->_getOutputFileName('', '', $this->context->shop->id, false,true);
+        }
+        $output .= '<a href="'.$get_reviews_file_url.'">'.$get_reviews_file_url.'</a> <br /> ';
+
         $info_cron = '<a href="'.$this->uri.'modules/'.$this->name.'/cron.php" target="_blank">'.$this->uri.'modules/'.$this->name.'/cron.php</a>';
         $info_cron .= '<br/><a href="'.$this->uri.'modules/'.$this->name.'/cron.php?local=true" target="_blank">'.$this->uri.'modules/'.$this->name.'/cron.php?local=true</a>';
+        $info_cron .= '<br/><a href="'.$this->uri.'modules/'.$this->name.'/cron.php?reviews=true" target="_blank">'.$this->uri.'modules/'.$this->name.'/cron.php?reviews=true</a>';
 
         if (count($languages) > 1) {
             $files_desc = $this->l('Configure these URLs in your Google Merchant Center account.');
@@ -2157,12 +2221,13 @@ class GShoppingFlux extends Module
         return $string;
     }
 
-    private function _getOutputFileName($lang, $curr, $shop, $local_inventory = false)
+    private function _getOutputFileName($lang, $curr, $shop, $local_inventory = false, $reviews = false)
     {
-        if (Configuration::get('GS_FILE_PREFIX', '', $this->context->shop->id_shop_group, $this->context->shop->id)) {
-            return Configuration::get('GS_FILE_PREFIX', '', $this->context->shop->id_shop_group, $this->context->shop->id).'_googleshopping'.($local_inventory? '-local-inventory' : '').'-s'.$shop.'-'.$lang.'-'.$curr.'.xml';
+        $file_prefix = Configuration::get('GS_FILE_PREFIX', '', $this->context->shop->id_shop_group, $this->context->shop->id);
+        if ($file_prefix) {
+            return $file_prefix .'_googleshopping'.($local_inventory? '-local-inventory' : ($reviews ? '-reviews' : '')).'-s'.$shop.(!empty($lang) ? '-'.$lang: '').(!empty($curr)?'-'.$curr:'').'.xml';
         }
-        return 'googleshopping'. ($local_inventory? '-local-inventory' : '').'-s'.$shop.'-'.$lang.'-'.$curr.'.xml';
+        return 'googleshopping'. ($local_inventory? '-local-inventory' : ($reviews ? '-reviews' : '')).'-s'.$shop.(!empty($lang) ? '-'.$lang: '').(!empty($curr)?'-'.$curr:'').'.xml';
     }
 
     public function getShopDescription($id_lang, $id_shop)
@@ -2189,8 +2254,11 @@ class GShoppingFlux extends Module
         return $ret;
     }
 
-    public function generateShopFileList($id_shop, $local_inventory = false)
+    public function generateShopFileList($id_shop, $local_inventory = false, $reviews = false)
     {
+        if ($reviews) {
+            return $this->generateReviewsFile($id_shop);
+        }
         // Get all shop languages
         $languages = GLangAndCurrency::getAllLangCurrencies(1);
         foreach ($languages as $i => $lang) {
@@ -2373,6 +2441,95 @@ class GShoppingFlux extends Module
             'nb_combinations' => $this->nb_combinations,
             'nb_prod_w_attr' => count($this->nb_prd_w_attr),
             'non_exported_products' => $this->nb_not_exported_products,
+        );
+    }
+
+    private function generateReviewsFile($id_shop)
+    {
+        $this->shop = new Shop($id_shop);
+        $this->module_conf = $this->getConfigFieldsValues($id_shop);
+
+        // Init file_path value
+        if ($this->module_conf['gen_file_in_root']) {
+            $generate_file_path = dirname(__FILE__).'/../../'.$this->_getOutputFileName(0, 0, $id_shop, false, true);
+        } else {
+            $generate_file_path = dirname(__FILE__).'/export/'.$this->_getOutputFileName(0, 0, $id_shop, false, true);
+        }
+
+        if ($this->shop->name == 'Prestashop') {
+            $this->shop->name = Configuration::get('PS_SHOP_NAME');
+        }
+
+        // Google Shopping XML
+        $xml = '<?xml version="1.0" encoding="'.self::CHARSET.'" ?>'."\n";
+        $xml .= '<feed xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.google.com/shopping/reviews/schema/product/2.3/product_reviews.xsd">'."\n";
+        $xml .= '<version>2.3</version>'."\n";
+
+        // Shop name
+        $xml .= '<publisher>'."\n";
+        $xml .= '<name>'.htmlspecialchars(Configuration::get('PS_SHOP_NAME'), self::REPLACE_FLAGS, self::CHARSET, false).'</name>'."\n";
+        $xml .= '</publisher>'."\n";
+
+        $googleshoppingfile = fopen($generate_file_path, 'w');
+
+        // Add UTF-8 byte order mark
+        fwrite($googleshoppingfile, pack('CCC', 0xef, 0xbb, 0xbf));
+
+        // File header
+        fwrite($googleshoppingfile, $xml);
+
+        $xml = '<reviews>'."\n";
+
+        $sql = 'SELECT pc.`id_product_comment`, pc.`id_product`, c.id_customer AS customer_id,
+                IF(c.id_customer, CONCAT(c.`firstname`, \' \',  c.`lastname`), pc.customer_name) customer_name,
+                IF(c.id_customer, 0, 1) anonymous, pc.`title`, pc.`content`, pc.`grade`, pc.`date_add`
+            FROM ' . _DB_PREFIX_ . 'product_comment pc
+            LEFT JOIN ' . _DB_PREFIX_ . 'customer c ON pc.id_customer = c.id_customer
+            WHERE pc.deleted = 0 AND pc.validate = 1';
+
+        $comments = Db::getInstance()->ExecuteS($sql);
+
+        foreach ($comments as $comment) {
+            $p = new Product($comment['id_product'], false, null, $id_shop, $this->context);
+
+            $xml .= '<review>'."\n";
+            $xml .= '<review_id>'.$comment['id_product_comment'].'</review_id>'."\n";
+            $xml .= '<reviewer>'."\n";
+            $xml .= '<name is_anonymous="'.$comment['anonymous'].'">'.$comment['customer_name'].'</name>'."\n";
+            $xml .= '</reviewer>'."\n";
+            $xml .= '<review_timestamp>'. $comment['date_add'].'</review_timestamp>'."\n";
+            $xml .= '<title>'. $comment['title'].'</title>'."\n";
+            $xml .= '<content>'. $comment['content'].'</content>'."\n";
+            $xml .= '<ratings>'."\n";
+            $xml .= '<overall min="1" max="5">'.$comment['grade'].'</overall>'."\n";
+            $xml .= '</ratings>'."\n";
+            $xml .= '<products>'."\n";
+            $xml .= '<product>'."\n";
+
+            $product_link = $this->context->link->getProductLink($comment['id_product'], $p->link_rewrite);
+
+            $xml .= '<product_url>'. $product_link .'</product_url>'."\n";
+            $xml .= '<skus>'."\n";
+            $xml .= '<sku>'.$p->reference.'</sku>'."\n";
+            $xml .= '</skus>'."\n";
+            $xml .= '<gtins>'."\n";
+            $xml .= '<gtin>'.$p->ean13.'</gtin>'."\n";
+            $xml .= '</gtins>'."\n";
+            $xml .= '</product>'."\n";
+            $xml .= '</products>'."\n";
+
+            $xml .= '</review>'."\n";
+        }
+
+        $xml .= '</reviews>'."\n";
+        $xml .= '</feed>';
+        fwrite($googleshoppingfile, $xml);
+        fclose($googleshoppingfile);
+
+        @chmod($generate_file_path, 0777);
+
+        return array(
+            'nb_reviews' => count($comments),
         );
     }
 
