@@ -2497,24 +2497,26 @@ class GShoppingFlux extends Module
             $xml .= '<reviewer>'."\n";
             $xml .= '<name is_anonymous="'.$comment['anonymous'].'">'.$comment['customer_name'].'</name>'."\n";
             $xml .= '</reviewer>'."\n";
-            $xml .= '<review_timestamp>'. $comment['date_add'].'</review_timestamp>'."\n";
+            $date_add = new DateTime($comment['date_add']);
+            $xml .= '<review_timestamp>'. $date_add->format(DATE_ATOM).'</review_timestamp>'."\n";
             $xml .= '<title>'. $comment['title'].'</title>'."\n";
             $xml .= '<content>'. $comment['content'].'</content>'."\n";
+            $product_link = $this->context->link->getProductLink($comment['id_product'], $p->link_rewrite);
+            $xml .= '<review_url type="group">'. $product_link.'</review_url>'."\n";
             $xml .= '<ratings>'."\n";
             $xml .= '<overall min="1" max="5">'.$comment['grade'].'</overall>'."\n";
             $xml .= '</ratings>'."\n";
             $xml .= '<products>'."\n";
             $xml .= '<product>'."\n";
-
-            $product_link = $this->context->link->getProductLink($comment['id_product'], $p->link_rewrite);
-
-            $xml .= '<product_url>'. $product_link .'</product_url>'."\n";
-            $xml .= '<skus>'."\n";
-            $xml .= '<sku>'.$p->reference.'</sku>'."\n";
-            $xml .= '</skus>'."\n";
+            $xml .= '<product_ids>'."\n";
             $xml .= '<gtins>'."\n";
             $xml .= '<gtin>'.$p->ean13.'</gtin>'."\n";
             $xml .= '</gtins>'."\n";
+            $xml .= '<skus>'."\n";
+            $xml .= '<sku>'.$p->reference.'</sku>'."\n";
+            $xml .= '</skus>'."\n";
+            $xml .= '</product_ids>'."\n";
+            $xml .= '<product_url>'. $product_link .'</product_url>'."\n";
             $xml .= '</product>'."\n";
             $xml .= '</products>'."\n";
 
