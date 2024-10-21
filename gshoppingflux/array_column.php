@@ -16,14 +16,14 @@ if (!function_exists('array_column')) {
      * Optionally, you may provide an $indexKey to index the values in the returned
      * array by the values from the $indexKey column in the input array.
      *
-     * @param array $input     A multi-dimensional array (record set) from which to pull
-     *                         a column of values
+     * @param array $input A multi-dimensional array (record set) from which to pull
+     *                     a column of values
      * @param mixed $columnKey The column of values to return. This value may be the
      *                         integer key of the column you wish to retrieve, or it
      *                         may be the string key name for an associative array
-     * @param mixed $indexKey  (Optional.) The column to use as the index/keys for
-     *                         the returned array. This value may be the integer key
-     *                         of the column, or it may be the string key name
+     * @param mixed $indexKey (Optional.) The column to use as the index/keys for
+     *                        the returned array. This value may be the integer key
+     *                        of the column, or it may be the string key name
      *
      * @return array
      */
@@ -43,7 +43,7 @@ if (!function_exists('array_column')) {
 
         if (!is_array($params[0])) {
             trigger_error(
-                'array_column() expects parameter 1 to be array, '.gettype($params[0]).' given',
+                'array_column() expects parameter 1 to be array, ' . gettype($params[0]) . ' given',
                 E_USER_WARNING
             );
 
@@ -84,7 +84,7 @@ if (!function_exists('array_column')) {
             }
         }
 
-        $resultArray = array();
+        $resultArray = [];
 
         foreach ($paramsInput as $row) {
             $key = $value = null;
