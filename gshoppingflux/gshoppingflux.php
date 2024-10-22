@@ -103,7 +103,8 @@ class GShoppingFlux extends Module
                     || !Configuration::updateValue('GS_QUANTITY', '1', false, (int) $shop_group_id, (int) $shop_id)
                     || !Configuration::updateValue('GS_FEATURED_PRODUCTS', '1', false, (int) $shop_group_id, (int) $shop_id)
                     || !Configuration::updateValue('GS_GEN_FILE_IN_ROOT', '1', false, (int) $shop_group_id, (int) $shop_id)
-                    || !Configuration::updateValue('GS_FILE_PREFIX', '', true, (int) $shop_group_id, (int) $shop_id)) {
+                    || !Configuration::updateValue('GS_FILE_PREFIX', '', true, (int) $shop_group_id, (int) $shop_id)
+                    || !Configuration::updateValue('GS_LOCAL_SHOP_CODE', '', true, (int) $shop_group_id, (int) $shop_id)) {
                     return false;
                 }
             }
@@ -215,7 +216,7 @@ class GShoppingFlux extends Module
         }
 
         if ($delete_params) {
-            if (!$this->uninstallDB() || !Configuration::deleteByName('GS_PRODUCT_TYPE') || !Configuration::deleteByName('GS_DESCRIPTION') || !Configuration::deleteByName('GS_SHIPPING_MODE') || !Configuration::deleteByName('GS_SHIPPING_PRICE') || !Configuration::deleteByName('GS_SHIPPING_COUNTRY') || !Configuration::deleteByName('GS_SHIPPING_COUNTRIES') || !Configuration::deleteByName('GS_CARRIERS_EXCLUDED') || !Configuration::deleteByName('GS_IMG_TYPE') || !Configuration::deleteByName('GS_MPN_TYPE') || !Configuration::deleteByName('GS_GENDER') || !Configuration::deleteByName('GS_AGE_GROUP') || !Configuration::deleteByName('GS_ATTRIBUTES') || !Configuration::deleteByName('GS_COLOR') || !Configuration::deleteByName('GS_MATERIAL') || !Configuration::deleteByName('GS_PATTERN') || !Configuration::deleteByName('GS_SIZE') || !Configuration::deleteByName('GS_EXPORT_MIN_PRICE') || !Configuration::deleteByName('GS_NO_GTIN') || !Configuration::deleteByName('GS_SHIPPING_DIMENSION') || !Configuration::deleteByName('GS_NO_BRAND') || !Configuration::deleteByName('GS_ID_EXISTS_TAG') || !Configuration::deleteByName('GS_EXPORT_NAP') || !Configuration::deleteByName('GS_QUANTITY') || !Configuration::deleteByName('GS_FEATURED_PRODUCTS') || !Configuration::deleteByName('GS_GEN_FILE_IN_ROOT') || !Configuration::deleteByName('GS_FILE_PREFIX')) {
+            if (!$this->uninstallDB() || !Configuration::deleteByName('GS_PRODUCT_TYPE') || !Configuration::deleteByName('GS_DESCRIPTION') || !Configuration::deleteByName('GS_SHIPPING_MODE') || !Configuration::deleteByName('GS_SHIPPING_PRICE') || !Configuration::deleteByName('GS_SHIPPING_COUNTRY') || !Configuration::deleteByName('GS_SHIPPING_COUNTRIES') || !Configuration::deleteByName('GS_CARRIERS_EXCLUDED') || !Configuration::deleteByName('GS_IMG_TYPE') || !Configuration::deleteByName('GS_MPN_TYPE') || !Configuration::deleteByName('GS_GENDER') || !Configuration::deleteByName('GS_AGE_GROUP') || !Configuration::deleteByName('GS_ATTRIBUTES') || !Configuration::deleteByName('GS_COLOR') || !Configuration::deleteByName('GS_MATERIAL') || !Configuration::deleteByName('GS_PATTERN') || !Configuration::deleteByName('GS_SIZE') || !Configuration::deleteByName('GS_EXPORT_MIN_PRICE') || !Configuration::deleteByName('GS_NO_GTIN') || !Configuration::deleteByName('GS_SHIPPING_DIMENSION') || !Configuration::deleteByName('GS_NO_BRAND') || !Configuration::deleteByName('GS_ID_EXISTS_TAG') || !Configuration::deleteByName('GS_EXPORT_NAP') || !Configuration::deleteByName('GS_QUANTITY') || !Configuration::deleteByName('GS_FEATURED_PRODUCTS') || !Configuration::deleteByName('GS_GEN_FILE_IN_ROOT') || !Configuration::deleteByName('GS_FILE_PREFIX') || !Configuration::deleteByName('GS_LOCAL_SHOP_CODE')) {
                 return false;
             }
         }
@@ -373,6 +374,21 @@ class GShoppingFlux extends Module
             } else {
                 $this->_html .= $this->displayError(sprintf($this->l('Unable to update settings for the following shop: %s'), implode(', ', $errors_update_shops)));
             }
+        } else if (Tools::isSubmit('submitLocalInventoryFluxOptions')) {
+            $errors_update_shops = array();
+            $updated = true;
+            $updated &= Configuration::updateValue('GS_LOCAL_SHOP_CODE', Tools::getValue('store_code'), false, (int) $shop_group_id, (int) $shop_id);
+            if (!$updated) {
+                $shop = new Shop($shop_id);
+                $errors_update_shops[] = $shop->name;
+            }
+
+            if (!count($errors_update_shops)) {
+                $this->confirm = $this->l('The settings have been updated.');
+                $this->generateXMLFiles(0, $shop_id, $shop_group_id, true);
+            } else {
+                $this->_html .= $this->displayError(sprintf($this->l('Unable to update settings for the following shop: %s'), implode(', ', $errors_update_shops)));
+            }
         } elseif (Tools::isSubmit('updateCategory')) {
             $id_gcategory = (int) Tools::getValue('id_gcategory', 0);
             $export = (int) Tools::getValue('export', 0);
@@ -431,6 +447,7 @@ class GShoppingFlux extends Module
             $this->_html .= $this->renderLangList();
         } else {
             $this->_html .= $this->renderForm();
+            $this->_html .= $this->renderLocalInventoryForm();
             $this->_html .= $this->renderCategList();
             $this->_html .= $this->renderLangList();
             $this->_html .= $this->renderInfo();
@@ -439,13 +456,13 @@ class GShoppingFlux extends Module
         return $this->_html;
     }
 
-    private function generateXMLFiles($lang_id, $shop_id, $shop_group_id)
+    private function generateXMLFiles($lang_id, $shop_id, $shop_group_id, $local_inventory = false)
     {
         if (isset($lang_id) && $lang_id != 0) {
-            $count = $this->generateLangFileList($lang_id, $shop_id);
+            $count = $this->generateLangFileList($lang_id, $shop_id, $local_inventory);
             $languages = GLangAndCurrency::getLangCurrencies($lang_id, $shop_id);
         } else {
-            $count = $this->generateShopFileList($shop_id);
+            $count = $this->generateShopFileList($shop_id, $local_inventory);
             $languages = GLangAndCurrency::getAllLangCurrencies(1);
         }
 
@@ -454,9 +471,9 @@ class GShoppingFlux extends Module
             foreach ($currencies as $curr) {
                 $currency = new Currency($curr);
                 if (Configuration::get('GS_GEN_FILE_IN_ROOT', 0, $shop_group_id, $shop_id) == 1) {
-                    $get_file_url = $this->uri.$this->_getOutputFileName($lang['iso_code'], $currency->iso_code, $shop_id);
+                    $get_file_url = $this->uri.$this->_getOutputFileName($lang['iso_code'], $currency->iso_code, $shop_id, $local_inventory);
                 } else {
-                    $get_file_url = $this->uri.'modules/'.$this->name.'/export/'.$this->_getOutputFileName($lang['iso_code'], $currency->iso_code, $shop_id);
+                    $get_file_url = $this->uri.'modules/'.$this->name.'/export/'.$this->_getOutputFileName($lang['iso_code'], $currency->iso_code, $shop_id, $local_inventory);
                 }
 
                 $this->confirm .= '<br /> <a href="'.$get_file_url.'" target="_blank">'.$get_file_url.'</a> : '.($count[$i]['nb_products'] - $count[$i]['nb_combinations']).' '.$this->l('products exported');
@@ -479,7 +496,6 @@ class GShoppingFlux extends Module
 
         return;
     }
-
     private function getWarningMultishopHtml()
     {
         return '<p class="alert alert-warning">'.$this->l('You cannot manage Google categories from a "All Shops" or a "Group Shop" context, select directly the shop you want to edit').'</p>';
@@ -1004,6 +1020,54 @@ class GShoppingFlux extends Module
         ));
     }
 
+    public function renderLocalInventoryForm()
+    {
+        $helper = new HelperForm();
+        $helper->show_toolbar = false;
+        $helper->table = $this->table;
+
+        $lang = new Language((int) Configuration::get('PS_LANG_DEFAULT'));
+        $helper->default_form_language = $lang->id;
+        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
+        $this->fields_form = array();
+        $helper->module = $this;
+        $helper->identifier = $this->identifier;
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+        $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $helper->tpl_vars = array(
+            'fields_value' => $this->getConfigLocalInventoryFieldsValues($this->context->shop->id),
+            'id_language' => $this->context->language->id,
+            'languages' => $this->context->controller->getLanguages(),
+        );
+
+        $id_lang = $this->context->language->id;
+        $id_shop = $this->context->shop->id;
+
+        $fields_form = array(
+            'form' => array(
+                'legend' => array(
+                    'title' => $this->l('Local Inventory Parameters'),
+                    'icon' => 'icon-cogs',
+                ),
+                'input' => array(
+                    array(
+                        'type' => 'text',
+                        'label' => $this->l('Your store code'),
+                        'name' => 'store_code',
+                        'desc' => $this->l('Your store code'),
+                    )),
+                'submit' => array(
+                    'name' => 'submitLocalInventoryFluxOptions',
+                    'title' => $this->l('Save & Export'),
+                ),
+            ),
+        );
+
+        return $helper->generateForm(array(
+            $fields_form,
+        ));
+    }
+
     public function getConfigFieldsValues($shop_id)
     {
         $shop_group_id = Shop::getGroupFromShop($shop_id);
@@ -1096,6 +1160,15 @@ class GShoppingFlux extends Module
             'gen_file_in_root' => (int) $gen_file_in_root,
             'file_prefix' => $file_prefix,
             'autoexport_on_save' => (int) $autoexport_on_save,
+        );
+    }
+
+    public function getConfigLocalInventoryFieldsValues($shop_id)
+    {
+        $shop_group_id = Shop::getGroupFromShop($shop_id);
+        $store_code = Configuration::get('GS_LOCAL_SHOP_CODE', 0, $shop_group_id, $shop_id);
+        return array(
+            'store_code' => $store_code,
         );
     }
 
@@ -1771,13 +1844,17 @@ class GShoppingFlux extends Module
                 $currency = new Currency($curr);
                 if (Configuration::get('GS_GEN_FILE_IN_ROOT', 0, $this->context->shop->id_shop_group, $this->context->shop->id) == 1) {
                     $get_file_url = $this->uri.$this->_getOutputFileName($lang['iso_code'], $currency->iso_code, $this->context->shop->id);
+                    $get_local_file_url = $this->uri.$this->_getOutputFileName($lang['iso_code'], $currency->iso_code, $this->context->shop->id, true);
                 } else {
                     $get_file_url = $this->uri.'modules/'.$this->name.'/export/'.$this->_getOutputFileName($lang['iso_code'], $currency->iso_code, $this->context->shop->id);
+                    $get_local_file_url = $this->uri.'modules/'.$this->name.'/export/'.$this->_getOutputFileName($lang['iso_code'], $currency->iso_code, $this->context->shop->id, true);
                 }
                 $output .= '<a href="'.$get_file_url.'">'.$get_file_url.'</a> <br /> ';
+                $output .= '<a href="'.$get_local_file_url.'">'.$get_local_file_url.'</a> <br /> ';
             }
         }
         $info_cron = '<a href="'.$this->uri.'modules/'.$this->name.'/cron.php" target="_blank">'.$this->uri.'modules/'.$this->name.'/cron.php</a>';
+        $info_cron .= '<br/><a href="'.$this->uri.'modules/'.$this->name.'/cron.php?local=true" target="_blank">'.$this->uri.'modules/'.$this->name.'/cron.php?local=true</a>';
 
         if (count($languages) > 1) {
             $files_desc = $this->l('Configure these URLs in your Google Merchant Center account.');
@@ -2080,12 +2157,12 @@ class GShoppingFlux extends Module
         return $string;
     }
 
-    private function _getOutputFileName($lang, $curr, $shop)
+    private function _getOutputFileName($lang, $curr, $shop, $local_inventory = false)
     {
         if (Configuration::get('GS_FILE_PREFIX', '', $this->context->shop->id_shop_group, $this->context->shop->id)) {
-            return Configuration::get('GS_FILE_PREFIX', '', $this->context->shop->id_shop_group, $this->context->shop->id).'_googleshopping-s'.$shop.'-'.$lang.'-'.$curr.'.xml';
+            return Configuration::get('GS_FILE_PREFIX', '', $this->context->shop->id_shop_group, $this->context->shop->id).'_googleshopping'.($local_inventory? '-local-inventory' : '').'-s'.$shop.'-'.$lang.'-'.$curr.'.xml';
         }
-        return 'googleshopping-s'.$shop.'-'.$lang.'-'.$curr.'.xml';
+        return 'googleshopping'. ($local_inventory? '-local-inventory' : '').'-s'.$shop.'-'.$lang.'-'.$curr.'.xml';
     }
 
     public function getShopDescription($id_lang, $id_shop)
@@ -2112,35 +2189,35 @@ class GShoppingFlux extends Module
         return $ret;
     }
 
-    public function generateShopFileList($id_shop)
+    public function generateShopFileList($id_shop, $local_inventory = false)
     {
         // Get all shop languages
         $languages = GLangAndCurrency::getAllLangCurrencies(1);
         foreach ($languages as $i => $lang) {
             $currencies = explode(';', $lang['id_currency']);
             foreach ($currencies as $id_curr) {
-                $ret[] = $this->generateFile($lang, $id_curr, $id_shop);
+                $ret[] = $this->generateFile($lang, $id_curr, $id_shop, $local_inventory);
             }
         }
 
         return $ret;
     }
 
-    public function generateLangFileList($id_lang, $id_shop)
+    public function generateLangFileList($id_lang, $id_shop, $local_inventory = false)
     {
         // Get all shop languages
         $languages = GLangAndCurrency::getLangCurrencies($id_lang, $id_shop);
         foreach ($languages as $i => $lang) {
             $currencies = explode(';', $lang['id_currency']);
             foreach ($currencies as $id_curr) {
-                $ret[] = $this->generateFile($lang, $id_curr, $id_shop);
+                $ret[] = $this->generateFile($lang, $id_curr, $id_shop, $local_inventory);
             }
         }
 
         return $ret;
     }
 
-    private function generateFile($lang, $id_curr, $id_shop)
+    private function generateFile($lang, $id_curr, $id_shop, $local_inventory = false)
     {
         $id_lang = (int) $lang['id_lang'];
         $curr = new Currency($id_curr);
@@ -2149,7 +2226,7 @@ class GShoppingFlux extends Module
         $this->id_root = $root->id_category;
 
         // Get module configuration for this shop
-        $this->module_conf = $this->getConfigFieldsValues($id_shop);
+        $this->module_conf = array_merge($this->getConfigFieldsValues($id_shop), $this->getConfigLocalInventoryFieldsValues($id_shop));
 
         // Init categories special attributes :
         // Google's matching category, gender, age_group, color_group, material, pattern, size...
@@ -2157,9 +2234,9 @@ class GShoppingFlux extends Module
 
         // Init file_path value
         if ($this->module_conf['gen_file_in_root']) {
-            $generate_file_path = dirname(__FILE__).'/../../'.$this->_getOutputFileName($lang['iso_code'], $curr->iso_code, $id_shop);
+            $generate_file_path = dirname(__FILE__).'/../../'.$this->_getOutputFileName($lang['iso_code'], $curr->iso_code, $id_shop, $local_inventory);
         } else {
-            $generate_file_path = dirname(__FILE__).'/export/'.$this->_getOutputFileName($lang['iso_code'], $curr->iso_code, $id_shop);
+            $generate_file_path = dirname(__FILE__).'/export/'.$this->_getOutputFileName($lang['iso_code'], $curr->iso_code, $id_shop, $local_inventory);
         }
 
         if ($this->shop->name == 'Prestashop') {
@@ -2267,12 +2344,20 @@ class GShoppingFlux extends Module
                     $product['weight'] += $a['weight'];
                     $product['item_group_id'] = $product['id_product'];
                     $product['gid'] = $product['id_product'].'-'.$productCombination['id_product_attribute'];
-                    $xml_googleshopping = $this->getItemXML($product, $lang, $id_curr, $id_shop, $productCombination['id_product_attribute']);
+                    if ($local_inventory) {
+                        $xml_googleshopping = $this->getLocalInventoryItemXML($product, $lang, $id_curr, $id_shop, $productCombination['id_product_attribute']);
+                    } else {
+                        $xml_googleshopping = $this->getItemXML($product, $lang, $id_curr, $id_shop, $productCombination['id_product_attribute']);
+                    }
                     fwrite($googleshoppingfile, $xml_googleshopping);
                 }
                 unset($original_product);
             } else {
-                $xml_googleshopping = $this->getItemXML($product, $lang, $id_curr, $id_shop);
+                if ($local_inventory) {
+                    $xml_googleshopping = $this->getLocalInventoryItemXML($product, $lang, $id_curr, $id_shop);
+                } else {
+                    $xml_googleshopping = $this->getItemXML($product, $lang, $id_curr, $id_shop);
+                }
                 fwrite($googleshoppingfile, $xml_googleshopping);
             }
         }
@@ -2289,6 +2374,72 @@ class GShoppingFlux extends Module
             'nb_prod_w_attr' => count($this->nb_prd_w_attr),
             'non_exported_products' => $this->nb_not_exported_products,
         );
+    }
+
+    private function getLocalInventoryItemXML($product, $lang, $id_curr, $id_shop, $combination = false)
+    {
+        $xml_googleshopping = '';
+        $id_lang = (int) $lang['id_lang'];
+        $p = new Product($product['id_product'], true, $id_lang, $id_shop, $this->context);
+        if (!$combination) {
+            $product['quantity'] = StockAvailable::getQuantityAvailableByProduct($product['id_product'], 0, $id_shop);
+        } else {
+            $product['quantity'] = StockAvailable::getQuantityAvailableByProduct($product['id_product'], $combination, $id_shop);
+        }
+        $xml_googleshopping .= '<item>'."\n";
+        $xml_googleshopping .= '<g:store_code>'.$this->module_conf['store_code'].'</g:store_code>'."\n";
+        $xml_googleshopping .= '<g:id>'.$product['gid'].'</g:id>'."\n";
+        // Product quantity & availability
+        if (empty($this->categories_values[$product['category_default']]['gcat_avail'])) {
+            if ($this->module_conf['quantity'] == 1 && $this->ps_stock_management) {
+                $xml_googleshopping .= '<g:quantity>'.$product['quantity'].'</g:quantity>'."\n";
+            }
+            if ($this->ps_stock_management) {
+                if ($product['quantity'] > 0 && $product['available_for_order']) {
+                    $xml_googleshopping .= '<g:availability>in stock</g:availability>'."\n";
+                } elseif ($p->isAvailableWhenOutOfStock((int) $p->out_of_stock) && $product['available_for_order']) {
+                    $xml_googleshopping .= '<g:availability>preorder</g:availability>'."\n";
+                } else {
+                    $xml_googleshopping .= '<g:availability>out of stock</g:availability>'."\n";
+                }
+            } else {
+                if ($product['available_for_order']) {
+                    $xml_googleshopping .= '<g:availability>in stock</g:availability>'."\n";
+                } else {
+                    $xml_googleshopping .= '<g:availability>out of stock</g:availability>'."\n";
+                }
+            }
+        } else {
+            if ($this->module_conf['quantity'] == 1 && $product['quantity'] > 0 && $this->ps_stock_management) {
+                $xml_googleshopping .= '<g:quantity>'.$product['quantity'].'</g:quantity>'."\n";
+            }
+            $xml_googleshopping .= '<g:availability>'.$this->categories_values[$product['category_default']]['gcat_avail'].'</g:availability>'."\n";
+        }
+
+        // Price(s)
+        $currency = new Currency((int) $id_curr);
+        $use_tax = ($product['tax_included'] ? true : false);
+        $no_tax = (!$use_tax ? true : false);
+        $product['price'] = (float) $p->getPriceStatic($product['id_product'], $use_tax, $combination) * $currency->conversion_rate;
+        $product['price_without_reduct'] = (float) $p->getPriceWithoutReduct($no_tax, $combination) * $currency->conversion_rate;
+        $product['price'] = Tools::ps_round($product['price'], _PS_PRICE_DISPLAY_PRECISION_);
+        $product['price_without_reduct'] = Tools::ps_round($product['price_without_reduct'], _PS_PRICE_DISPLAY_PRECISION_);
+        if ((float) ($product['price']) < (float) ($product['price_without_reduct'])) {
+            $xml_googleshopping .= '<g:price>'.$product['price_without_reduct'].' '.$currency->iso_code.'</g:price>'."\n";
+            $xml_googleshopping .= '<g:sale_price>'.$product['price'].' '.$currency->iso_code.'</g:sale_price>'."\n";
+        } else {
+            $xml_googleshopping .= '<g:price>'.$product['price'].' '.$currency->iso_code.'</g:price>'."\n";
+        }
+
+        $xml_googleshopping .= '</item>'."\n\n";
+
+        if ($combination) {
+            ++$this->nb_combinations;
+            $this->nb_prd_w_attr[$product['id_product']] = 1;
+        }
+        ++$this->nb_total_products;
+
+        return $xml_googleshopping;
     }
 
     private function getItemXML($product, $lang, $id_curr, $id_shop, $combination = false)
