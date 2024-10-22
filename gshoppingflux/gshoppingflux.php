@@ -571,6 +571,10 @@ class GShoppingFlux extends Module
                 'name' => $this->l('Long description'),
             ),
             array(
+                'id_desc' => 'short+long',
+                'name' => $this->l('Short and long description'),
+            ),
+            array(
                 'id_desc' => 'meta',
                 'name' => $this->l('Meta description'),
             ),
@@ -2349,6 +2353,14 @@ class GShoppingFlux extends Module
             $description_crop = $product['description'];
         } elseif ($this->module_conf['description'] == 'short') {
             $description_crop = $product['description_short'];
+        } elseif ($this->module_conf['description'] == 'short+long') {
+            $description_crop = '';
+            if (!empty($product['description_short'])) {
+                $description_crop = $product['description_short'];
+            }
+            if (!empty($product['description'])) {
+                $description_crop .= (!empty($product['description_short']) ? ' ' : '') . $product['description'];
+            }
         } elseif ($this->module_conf['description'] == 'meta') {
             $description_crop = $product['meta_description'];
         }
