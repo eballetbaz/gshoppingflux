@@ -2605,7 +2605,13 @@ class GShoppingFlux extends Module
         }
 
         // Shipping
-        if ($this->module_conf['shipping_mode'] == 'fixed') {
+        if($product['is_virtual']) {
+            $xml_googleshopping .= '<g:shipping>' . "\n";
+            $xml_googleshopping .= "\t" . '<g:country>' . $this->module_conf['shipping_country'] . '</g:country>' . "\n";
+            $xml_googleshopping .= "\t" . '<g:service>Standard</g:service>' . "\n";
+            $xml_googleshopping .= "\t" . '<g:price>' . Tools::convertPriceFull(0, null, $currency) . ' ' . $currency->iso_code . '</g:price>' . "\n";
+            $xml_googleshopping .= '</g:shipping>' . "\n";
+        } elseif ($this->module_conf['shipping_mode'] == 'fixed') {
             $xml_googleshopping .= '<g:shipping>' . "\n";
             $xml_googleshopping .= "\t" . '<g:country>' . $this->module_conf['shipping_country'] . '</g:country>' . "\n";
             $xml_googleshopping .= "\t" . '<g:service>Standard</g:service>' . "\n";
