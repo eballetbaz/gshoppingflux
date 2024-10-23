@@ -1,7 +1,7 @@
 <?php
 
 global $_MODULE;
-$_MODULE = array();
+$_MODULE = [];
 $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_b32b00665b88e4bbd8b4650997a31dda'] = 'Google Shopping Flux';
 $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_b6e6fc6097a65ff1ad5f6188063e85b7'] = 'Exportez vos produits vers Google Merchant Center, facilement.';
 $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_29de2b388c4dbba0f83de46d285d8a08'] = 'Exemple de Catégorie Google > Sous-Catégorie Google > etc.';
