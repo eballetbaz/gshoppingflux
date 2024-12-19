@@ -2665,10 +2665,10 @@ class GShoppingFlux extends Module
         }
 
         if (Tools::strlen($short_title_crop) > $short_title_limit) {
-            $title_crop = Tools::substr($short_title_crop, 0, $short_title_limit - 1);
-            $title_crop = Tools::substr($short_title_crop, 0, strrpos($short_title_crop, ' '));
+            $short_title_crop = Tools::substr($short_title_crop, 0, $short_title_limit - 1);
+            $short_title_crop = Tools::substr($short_title_crop, 0, strrpos($short_title_crop, ' '));
         }
-        
+
         // Description type
         if ($this->module_conf['description'] == 'long') {
             $description_crop = $product['description'];
