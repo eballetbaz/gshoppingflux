@@ -920,9 +920,9 @@ trait FeedGeneratorTrait
         $xml_googleshopping .= '<g:link><![CDATA[' . $this->linkencode($product_link) . ']]></g:link>' . "\n";
 
         // Image links
-        $images = Image::getImages($lang['id_lang'], $product['id_product'], $combination);
+        $images = Image::getImages($lang['id_lang'], $product['id_product'], $combination, $id_shop);
         if (count($images) == 0 && $combination != false) {
-            $images = Image::getImages($lang['id_lang'], $product['id_product']);
+            $images = Image::getImages($lang['id_lang'], $product['id_product'], null, $id_shop);
         }
         $indexTabLang = 0;
         if ($tailleTabLang > 1) {
