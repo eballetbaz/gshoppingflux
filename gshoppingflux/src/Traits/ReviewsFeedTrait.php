@@ -39,7 +39,7 @@ trait ReviewsFeedTrait
 
         // Init file_path value
         if ($this->module_conf['gen_file_in_root']) {
-            $generate_file_path = dirname(__FILE__) . '/../../' . $this->_getOutputFileName(0, 0, $id_shop, false, true);
+            $generate_file_path = _PS_ROOT_DIR_ . '/' . $this->_getOutputFileName(0, 0, $id_shop, false, true);
         } else {
             $generate_file_path = dirname(__FILE__) . '/export/' . $this->_getOutputFileName(0, 0, $id_shop, false, true);
         }
