@@ -178,3 +178,6 @@ $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_34e80a799d144cfe4af46815e103f
 $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_ce2f716c73c818e48a97ffc1441d389c'] = 'avis exportés';
 $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_091d7db32ecef3954e0028a18eaa4443'] = 'Jeton de sécurité CRON';
 $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_b90c33f41b0c65d510aaa20761ffe58f'] = 'Facultatif. Si renseigné, cron.php exige « &token=<cette valeur> » pour s\'exécuter, empêchant quiconque de déclencher une régénération du flux. Laissez vide pour garder cron.php ouvert comme avant.';
+$_MODULE['<{gshoppingflux}prestashop>gshoppingflux_e8a49daf87debcf329561296e607caec'] = 'Type de titre';
+$_MODULE['<{gshoppingflux}prestashop>gshoppingflux_ec0193284c3d7c7e3d5c63bec2c8fd6d'] = 'Nom et attributs';
+$_MODULE['<{gshoppingflux}prestashop>gshoppingflux_223025adb293a6e3e853af45a2b8efb6'] = 'Nom et attributs et marque';

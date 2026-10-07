@@ -886,6 +886,11 @@ trait FeedGeneratorTrait
             $title_crop .= ' ' . $product['size'];
         }
 
+        // Append Brand if configured
+        if (!empty($product['id_manufacturer']) && $this->module_conf['title'] == 'name+attributes+brand') {
+            $title_crop .= ' - ' . htmlspecialchars(Manufacturer::getNameById((int) $product['id_manufacturer']), self::REPLACE_FLAGS, self::CHARSET, false);
+	    }
+
         $title_crop = $this->truncateAtWordBoundary($title_crop, $title_limit);
         $short_title_crop = $this->truncateAtWordBoundary($short_title_crop, $short_title_limit);
 

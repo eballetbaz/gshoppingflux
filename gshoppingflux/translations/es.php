@@ -157,3 +157,6 @@ $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_8eddcc44b4d68603564af379deea5
 $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_29de2b388c4dbba0f83de46d285d8a08'] = 'Ejemplo de Categoría de Google > Subcategoría de Google > etc.';
 $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_091d7db32ecef3954e0028a18eaa4443'] = 'Token de seguridad CRON';
 $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_b90c33f41b0c65d510aaa20761ffe58f'] = 'Opcional. Si se configura, cron.php exige «&token=<este valor>» para ejecutarse, impidiendo que cualquiera pueda desencadenar una regeneración del feed. Déjelo vacío para mantener cron.php abierto como antes.';
+$_MODULE['<{gshoppingflux}prestashop>gshoppingflux_e8a49daf87debcf329561296e607caec'] = 'Tipo de título';
+$_MODULE['<{gshoppingflux}prestashop>gshoppingflux_ec0193284c3d7c7e3d5c63bec2c8fd6d'] = 'Nombre y atributos';
+$_MODULE['<{gshoppingflux}prestashop>gshoppingflux_223025adb293a6e3e853af45a2b8efb6'] = 'Nombre y atributos y marca';
