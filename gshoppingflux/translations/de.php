@@ -160,3 +160,4 @@ $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_b90c33f41b0c65d510aaa20761ffe
 $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_e8a49daf87debcf329561296e607caec'] = 'Titeltyp';
 $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_ec0193284c3d7c7e3d5c63bec2c8fd6d'] = 'Name und Attribute';
 $_MODULE['<{gshoppingflux}prestashop>gshoppingflux_223025adb293a6e3e853af45a2b8efb6'] = 'Name und Attribute und Marke';
+$_MODULE['<{gshoppingflux}prestashop>gshoppingflux_e9099825cb8488c9e7d5dffca095d28b'] = 'Jedes Wort des Titels und des Kurztitels großschreiben';

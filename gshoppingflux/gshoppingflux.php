@@ -95,6 +95,7 @@ class GShoppingFlux extends Module
     const CONFIG_DEFAULTS = [
         'GS_PRODUCT_TYPE' => '',
         'GS_TITLE' => 'name+attributes',
+        'GS_CAPITALIZE_TITLE' => '1',
         'GS_DESCRIPTION' => 'short',
         'GS_SHIPPING_MODE' => 'fixed',
         'GS_SHIPPING_PRICE_FIXED' => '1',

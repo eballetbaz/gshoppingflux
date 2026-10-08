@@ -154,6 +154,7 @@ trait AdminOptionsTrait
         // Update all configuration values
         $updated &= Configuration::updateValue('GS_PRODUCT_TYPE', $product_type, false, (int) $shop_group_id, (int) $shop_id);
         $updated &= Configuration::updateValue('GS_TITLE', $title, false, (int) $shop_group_id, (int) $shop_id);
+        $updated &= Configuration::updateValue('GS_CAPITALIZE_TITLE', (bool) Tools::getValue('capitalize_title'), false, (int) $shop_group_id, (int) $shop_id);
         $updated &= Configuration::updateValue('GS_DESCRIPTION', $description, false, (int) $shop_group_id, (int) $shop_id);
         $updated &= Configuration::updateValue('GS_SHIPPING_MODE', $shipping_mode, false, (int) $shop_group_id, (int) $shop_id);
         $updated &= Configuration::updateValue('GS_SHIPPING_PRICE', (float) Tools::getValue('shipping_price'), false, (int) $shop_group_id, (int) $shop_id);
@@ -511,6 +512,8 @@ trait AdminOptionsTrait
                             'name' => 'name',
                         ]
                     ],
+                    // Option to capitalize each words of title and short title
+                    $this->boolSwitchField('capitalize_title', $this->l('Capitalize words of title and short title')),
                     // Description type selector
                     [
                         'type' => 'select',
@@ -904,6 +907,7 @@ trait AdminOptionsTrait
         // Initialize all variables with default values
         $product_type = [];
         $title = 'name+attributes';
+        $capitalize_title = true;
         $description = 'short';
         $shipping_price_fixed = true;
         $shipping_mode = 'fixed';
@@ -938,6 +942,7 @@ trait AdminOptionsTrait
 
         // Retrieve all configuration values
         $title = Configuration::get('GS_TITLE', 0, $shop_group_id, $shop_id);
+        $capitalize_title &= (bool) Configuration::get('GS_CAPITALIZE_TITLE', 0, $shop_group_id, $shop_id);
         $description = Configuration::get('GS_DESCRIPTION', 0, $shop_group_id, $shop_id);
         $shipping_mode = Configuration::get('GS_SHIPPING_MODE', 0, $shop_group_id, $shop_id);
         $shipping_price_fixed &= (bool) Configuration::get('GS_SHIPPING_PRICE_FIXED', 0, $shop_group_id, $shop_id);
@@ -971,6 +976,7 @@ trait AdminOptionsTrait
         return [
             'product_type[]' => $product_type,
             'title' => $title,
+            'capitalize_title' => (int) $capitalize_title,
             'description' => $description,
             'shipping_mode' => $shipping_mode,
             'shipping_price_fixed' => (int) $shipping_price_fixed,

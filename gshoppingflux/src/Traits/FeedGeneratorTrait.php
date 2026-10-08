@@ -919,8 +919,8 @@ trait FeedGeneratorTrait
 
         $xml_googleshopping .= '<item>' . "\n";
         $xml_googleshopping .= '<g:id>' . $product['gid'] . '</g:id>' . "\n";
-        $xml_googleshopping .= '<g:title><![CDATA[' . $this->cdataSafe($title_crop) . ']]></g:title>' . "\n";
-        $xml_googleshopping .= '<g:short_title><![CDATA[' . $this->cdataSafe($short_title_crop) . ']]></g:short_title>' . "\n";
+        $xml_googleshopping .= '<g:title><![CDATA[' . $this->cdataSafe($this->prettifyTitle($title_crop)) . ']]></g:title>' . "\n";
+        $xml_googleshopping .= '<g:short_title><![CDATA[' . $this->cdataSafe($this->prettifyTitle($short_title_crop)) . ']]></g:short_title>' . "\n";
         $xml_googleshopping .= '<g:description><![CDATA[' . $this->cdataSafe($description_crop) . ']]></g:description>' . "\n";
         $xml_googleshopping .= '<g:link><![CDATA[' . $this->linkencode($product_link) . ']]></g:link>' . "\n";
 
@@ -1251,5 +1251,27 @@ trait FeedGeneratorTrait
         ++$this->nb_total_products;
 
         return $xml_googleshopping;
+    }
+
+    function prettifyTitle($text) {
+        // If capitalize words feature is enabled, then transform title
+        if (Configuration::get('GS_CAPITALIZE_TITLE', 0, $shop_group_id, $shop_id) == 1) {
+            return $this->capitalizeWords($text);
+        }
+        // Otherwise return text as-is
+        return $text;
+    }
+
+    // Capitalize the first letter of each word in a string
+    function capitalizeWords($text) {
+        return preg_replace_callback('/\b\w+\b/u', function ($matches) {
+            $word = $matches[0];
+            // If word start by an upper character, transform only the next characters
+            if (preg_match('/^[A-ZÀ-Ÿ]/u', $word)) {
+                return mb_substr($word, 0, 1, 'UTF-8') . mb_strtolower(mb_substr($word, 1, null, 'UTF-8'), 'UTF-8');
+            }
+            // Otherwise call ucfirst on the word lowercased
+            return ucfirst(mb_strtolower($word, 'UTF-8'));
+        }, $text);
     }
 }
