@@ -55,6 +55,10 @@ Depending on your store and what you want to send to google, you would need to c
 
 ## Changelog
 
+### Version 1.8.2 (2026)
+
+- New feature : Option to append Brand to the title (Thank you @eballetbaz)
+
 ### Version 1.8.1 (2026)
 
 - Fix XML feed no longer generated at the shop root when "Generate the files to the root of the site" is enabled, a regression from 1.8.0 (Thank you @eballetbaz)
