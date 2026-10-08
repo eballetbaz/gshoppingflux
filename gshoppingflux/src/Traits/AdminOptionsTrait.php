@@ -126,6 +126,10 @@ trait AdminOptionsTrait
         }
 
         // Whitelist incoming values backed by a fixed option list
+        $title = Tools::getValue('title');
+        if (!in_array($title, self::VALID_TITLES, true)) {
+            $title = 'name+attributes';
+        }
         $description = Tools::getValue('description');
         if (!in_array($description, self::VALID_DESCRIPTIONS, true)) {
             $description = 'short';
@@ -149,6 +153,7 @@ trait AdminOptionsTrait
 
         // Update all configuration values
         $updated &= Configuration::updateValue('GS_PRODUCT_TYPE', $product_type, false, (int) $shop_group_id, (int) $shop_id);
+        $updated &= Configuration::updateValue('GS_TITLE', $title, false, (int) $shop_group_id, (int) $shop_id);
         $updated &= Configuration::updateValue('GS_DESCRIPTION', $description, false, (int) $shop_group_id, (int) $shop_id);
         $updated &= Configuration::updateValue('GS_SHIPPING_MODE', $shipping_mode, false, (int) $shop_group_id, (int) $shop_id);
         $updated &= Configuration::updateValue('GS_SHIPPING_PRICE', (float) Tools::getValue('shipping_price'), false, (int) $shop_group_id, (int) $shop_id);
@@ -429,6 +434,18 @@ trait AdminOptionsTrait
         ];
         $features = array_merge($features, $this->getShopFeatures($id_lang, $id_shop));
 
+        // Build title type options
+        $titles = [
+            [
+                'id_title' => 'name+attributes',
+                'name' => $this->l('Name and attributes')
+            ],
+            [
+                'id_title' => 'name+attributes+brand',
+                'name' => $this->l('Name and attributes and brand')
+            ]
+        ];
+
         // Build description type options
         $descriptions = [
             [
@@ -481,6 +498,18 @@ trait AdminOptionsTrait
                         // 'class' => 'fixed-width-xl',
                         'lang' => true,
                         'desc' => $this->l('Your shop\'s default product type, ie: if you sell pants and shirts, and your main categories are "Men", "Women", "Kids", enter "Clothing" here. That will be exported as your shop main category. This setting is optional and can be left empty. Besides the module requires that at least main category of your shop is correctly linked to a Google product category.'),
+                    ],
+                    // Title type selector
+                    [
+                        'type' => 'select',
+                        'label' => $this->l('Title type'),
+                        'name' => 'title',
+                        'default_value' => $helper->tpl_vars['fields_value']['title'],
+                        'options' => [
+                            'query' => $titles,
+                            'id' => 'id_title',
+                            'name' => 'name',
+                        ]
                     ],
                     // Description type selector
                     [
@@ -874,6 +903,7 @@ trait AdminOptionsTrait
 
         // Initialize all variables with default values
         $product_type = [];
+        $title = 'name+attributes';
         $description = 'short';
         $shipping_price_fixed = true;
         $shipping_mode = 'fixed';
@@ -907,6 +937,7 @@ trait AdminOptionsTrait
         }
 
         // Retrieve all configuration values
+        $title = Configuration::get('GS_TITLE', 0, $shop_group_id, $shop_id);
         $description = Configuration::get('GS_DESCRIPTION', 0, $shop_group_id, $shop_id);
         $shipping_mode = Configuration::get('GS_SHIPPING_MODE', 0, $shop_group_id, $shop_id);
         $shipping_price_fixed &= (bool) Configuration::get('GS_SHIPPING_PRICE_FIXED', 0, $shop_group_id, $shop_id);
@@ -939,6 +970,7 @@ trait AdminOptionsTrait
         // Return formatted array for form display
         return [
             'product_type[]' => $product_type,
+            'title' => $title,
             'description' => $description,
             'shipping_mode' => $shipping_mode,
             'shipping_price_fixed' => (int) $shipping_price_fixed,

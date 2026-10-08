@@ -9,7 +9,7 @@
  * @package GShoppingFlux
  * @copyright 2014-2025 Google Shopping Flux Contributors
  * @license Apache License 2.0
- * @version 1.8.1
+ * @version 1.8.2
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -94,6 +94,7 @@ class GShoppingFlux extends Module
      */
     const CONFIG_DEFAULTS = [
         'GS_PRODUCT_TYPE' => '',
+        'GS_TITLE' => 'name+attributes',
         'GS_DESCRIPTION' => 'short',
         'GS_SHIPPING_MODE' => 'fixed',
         'GS_SHIPPING_PRICE_FIXED' => '1',
@@ -134,6 +135,7 @@ class GShoppingFlux extends Module
     const VALID_AVAILABILITY = ['', 'in stock', 'preorder'];
     const VALID_GENDERS = ['', 'male', 'female', 'unisex'];
     const VALID_AGE_GROUPS = ['', 'newborn', 'infant', 'toddler', 'kids', 'adult'];
+    const VALID_TITLES = ['name+attributes', 'name+attributes+brand'];
     const VALID_DESCRIPTIONS = ['short', 'long', 'short+long', 'meta'];
     const VALID_SHIPPING_MODES = ['none', 'fixed', 'full'];
     const VALID_MPN_TYPES = ['reference', 'supplier_reference'];
@@ -214,7 +216,7 @@ class GShoppingFlux extends Module
     {
         $this->name = 'gshoppingflux';
         $this->tab = 'smart_shopping';
-        $this->version = '1.8.1';
+        $this->version = '1.8.2';
         $this->author = 'Dim00z';
         $this->bootstrap = true;
 
