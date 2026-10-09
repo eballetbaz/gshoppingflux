@@ -27,7 +27,7 @@ use Tools;
  * inventory Google Shopping XML feeds, one <item> at a time.
  *
  * @package GShoppingFlux
- * @copyright 2014-2025 Google Shopping Flux Contributors
+ * @copyright 2014-2026 Google Shopping Flux Contributors
  * @license Apache License 2.0
  */
 trait FeedGeneratorTrait
@@ -1253,25 +1253,50 @@ trait FeedGeneratorTrait
         return $xml_googleshopping;
     }
 
-    function prettifyTitle($text) {
-        // If capitalize words feature is enabled, then transform title
-        if (Configuration::get('GS_CAPITALIZE_TITLE', 0, $shop_group_id, $shop_id) == 1) {
-            return $this->capitalizeWords($text);
+    /**
+     * Capitalize each word of a title when the "capitalize title" option is enabled
+     *
+     * @param string $text Title to transform
+     * @return string
+     */
+    private function prettifyTitle($text)
+    {
+        if (empty($this->module_conf['capitalize_title'])) {
+            return $text;
         }
-        // Otherwise return text as-is
-        return $text;
+
+        return $this->capitalizeWords($text);
     }
 
-    // Capitalize the first letter of each word in a string
-    function capitalizeWords($text) {
+    /**
+     * Uppercase the first letter of each word (multibyte-safe)
+     *
+     * Casing choice: the rest of each word is never lowercased, and a word that
+     * already holds an uppercase letter after its first one is left untouched,
+     * so sizes, acronyms and mixed-case brand names keep their original casing.
+     * Lowercasing the rest would turn "XL" into "Xl" and "iPhone" into "Iphone".
+     * The trade-off is that a title typed entirely in capitals stays in capitals.
+     *
+     * Examples:
+     *   "T-SHIRT coton bio - Taille XL" => "T-SHIRT Coton Bio - Taille XL"
+     *   "iPhone 15 coque"               => "iPhone 15 Coque"
+     *   "écran plat ÉNORME"             => "Écran Plat ÉNORME"
+     *   "crème à l'huile d'olive 50ml"  => "Crème À L'Huile D'Olive 50ml"
+     *
+     * @param string $text
+     * @return string
+     */
+    private function capitalizeWords($text)
+    {
         return preg_replace_callback('/\b\w+\b/u', function ($matches) {
-            $word = $matches[0];
-            // If word start by an upper character, transform only the next characters
-            if (preg_match('/^[A-ZÀ-Ÿ]/u', $word)) {
-                return mb_substr($word, 0, 1, 'UTF-8') . mb_strtolower(mb_substr($word, 1, null, 'UTF-8'), 'UTF-8');
+            $rest = Tools::substr($matches[0], 1);
+
+            // Word already holding uppercase letters after the first one ("XL", "iPhone"): keep it as-is
+            if ($rest !== Tools::strtolower($rest)) {
+                return $matches[0];
             }
-            // Otherwise call ucfirst on the word lowercased
-            return ucfirst(mb_strtolower($word, 'UTF-8'));
-        }, $text);
+
+            return Tools::strtoupper(Tools::substr($matches[0], 0, 1)) . $rest;
+        }, (string) $text);
     }
 }

@@ -20,7 +20,7 @@ use Tools;
  * forms.
  *
  * @package GShoppingFlux
- * @copyright 2014-2025 Google Shopping Flux Contributors
+ * @copyright 2014-2026 Google Shopping Flux Contributors
  * @license Apache License 2.0
  */
 trait AdminOptionsTrait
@@ -513,7 +513,11 @@ trait AdminOptionsTrait
                         ]
                     ],
                     // Option to capitalize each words of title and short title
-                    $this->boolSwitchField('capitalize_title', $this->l('Capitalize words of title and short title')),
+                    $this->boolSwitchField(
+                        'capitalize_title',
+                        $this->l('Capitalize words of title and short title'),
+                        $this->l('Uppercases the first letter of each word. Words that already contain capitals after their first letter (sizes, acronyms, brands) are kept as-is, e.g. "iPhone case size XL" becomes "iPhone Case Size XL".')
+                    ),
                     // Description type selector
                     [
                         'type' => 'select',
